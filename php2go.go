@@ -1,6 +1,7 @@
 package php2go
 
 import (
+	"archive/zip"
 	"bytes"
 	"crypto/hmac"
 	"crypto/md5"
@@ -37,6 +38,14 @@ import (
 
 func GetEnv(varName string) string {
 	return os.Getenv(varName)
+}
+
+func PutEnv(setting string) error {
+	s := strings.Split(setting, "=")
+	if len(s) != 2 {
+		panic("setting: invalid")
+	}
+	return os.Setenv(s[0], s[1])
 }
 
 func GoVersion() string {
@@ -87,7 +96,7 @@ func ParseUrl(str string) (*url.URL, error) {
 	return url.Parse(str)
 }
 
-func StrrRchr(str, chr string) string {
+func Strrrchr(str, chr string) string {
 	if len(str) == 0 || len(chr) == 0 {
 		return ""
 	}
@@ -97,11 +106,7 @@ func StrrRchr(str, chr string) string {
 	return ""
 }
 
-// Strtr eg:
-//	replace := make(map[string]string)
-//	replace["Golang"] = "PHP"
-//	fmt.Println(Strtr("Golang is the best language in the world", replace))
-func Strtr(str string, replace map[string]string) string {
+func StrTr(str string, replace map[string]string) string {
 	if len(replace) == 0 || len(str) == 0 {
 		return str
 	}
@@ -121,7 +126,7 @@ func ArrayDiffAssoc(s1, s2 map[string]any) map[string]any {
 	return r
 }
 
-func Stripos(haystack string, needle string, offset ...int) int {
+func StrIPos(haystack string, needle string, offset ...int) int {
 	off := 0
 	if len(offset) > 0 {
 		off = offset[0]
@@ -162,6 +167,13 @@ func Ip2Long(ipAddress string) uint32 {
 	return binary.BigEndian.Uint32(ip.To4())
 }
 
+func Long2ip(properAddress uint32) string {
+	ipByte := make([]byte, 4)
+	binary.BigEndian.PutUint32(ipByte, properAddress)
+	ip := net.IP(ipByte)
+	return ip.String()
+}
+
 func ParseStr(str string, key string) ([]string, error) {
 	parseStr, err := url.ParseQuery(str)
 	if err != nil {
@@ -195,7 +207,7 @@ func ArrayUnique(arr []string) []string {
 	return result
 }
 
-func Fopen(filePath string) (*os.File, error) {
+func FOpen(filePath string) (*os.File, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -345,8 +357,8 @@ func DirName(dir string) string {
 }
 
 func PasswordHash(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(bytes), err
+	bts, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bts), err
 }
 
 func PasswordVerify(password, hash string) bool {
@@ -417,7 +429,7 @@ func Exec(command string) error {
 	return exec.Command(command).Run()
 }
 
-func PregReplaceCallback(pattern string, callback func(string) string, subject string) string {
+func PRegReplaceCallback(pattern string, callback func(string) string, subject string) string {
 	re := regexp.MustCompile(pattern)
 	return re.ReplaceAllStringFunc(subject, callback)
 }
@@ -475,7 +487,7 @@ func MicroTime() float64 {
 	return float64(now.Unix()) + micSeconds
 }
 
-func PregQuote(str string) string {
+func PRegQuote(str string) string {
 	return regexp.QuoteMeta(str)
 }
 
@@ -633,14 +645,14 @@ func Empty(val any) bool {
 	return reflect.DeepEqual(val, reflect.Zero(v.Type()).Interface())
 }
 
-func Fgetcsv(handle *os.File, length int, delimiter rune) ([][]string, error) {
+func FGetCsv(handle *os.File, length int, delimiter rune) ([][]string, error) {
 	reader := csv.NewReader(handle)
 	reader.Comma = delimiter
 	// TODO length limit
 	return reader.ReadAll()
 }
 
-func Filemtime(filename string) (int64, error) {
+func FileMtime(filename string) (int64, error) {
 	fd, err := os.Open(filename)
 	if err != nil {
 		return 0, err
@@ -653,7 +665,7 @@ func Filemtime(filename string) (int64, error) {
 	return fileinfo.ModTime().Unix(), nil
 }
 
-func Fclose(handle *os.File) error {
+func FClose(handle *os.File) error {
 	return handle.Close()
 }
 
@@ -669,7 +681,7 @@ func Realpath(path string) (string, error) {
 	return filepath.Abs(path)
 }
 
-func Getcwd() (string, error) {
+func GetCwd() (string, error) {
 	dir, err := os.Getwd()
 	return dir, err
 }
@@ -758,11 +770,11 @@ func Stat(filename string) (os.FileInfo, error) {
 	return os.Stat(filename)
 }
 
-func Octdec(str string) (int64, error) {
+func OcTdeC(str string) (int64, error) {
 	return strconv.ParseInt(str, 8, 0)
 }
 
-func Decoct(number int64) string {
+func DeCocT(number int64) string {
 	return strconv.FormatInt(number, 8)
 }
 
@@ -782,7 +794,7 @@ func Sha1(str string) string {
 	return hex.EncodeToString(has.Sum(nil))
 }
 
-func Strstr(haystack string, needle string) string {
+func StrStr(haystack string, needle string) string {
 	if needle == "" {
 		return ""
 	}
@@ -797,7 +809,7 @@ func StrRepeat(input string, multiplier int) string {
 	return strings.Repeat(input, multiplier)
 }
 
-func MbStrlen(str string) int {
+func MbStrLen(str string) int {
 	return utf8.RuneCountInString(str)
 }
 
@@ -880,15 +892,15 @@ func ChunkSplit(body string, chunklen uint, end string) string {
 	return string(ns)
 }
 
-func Ucwords(str string) string {
+func UCWords(str string) string {
 	return strings.Title(str)
 }
 
-func Dechex(number int64) string {
+func DecHex(number int64) string {
 	return strconv.FormatInt(number, 16)
 }
 
-func Hexdec(str string) (int64, error) {
+func HexDec(str string) (int64, error) {
 	return strconv.ParseInt(str, 16, 0)
 }
 
@@ -900,7 +912,7 @@ func Bin2hex(str string) (string, error) {
 	return strconv.FormatInt(i, 16), nil
 }
 
-func Bindec(str string) (string, error) {
+func BinDec(str string) (string, error) {
 	i, err := strconv.ParseInt(str, 2, 0)
 	if err != nil {
 		return "", err
@@ -908,7 +920,7 @@ func Bindec(str string) (string, error) {
 	return strconv.FormatInt(i, 10), nil
 }
 
-func Decbin(number int64) string {
+func DecBin(number int64) string {
 	return strconv.FormatInt(number, 2)
 }
 
@@ -1111,7 +1123,7 @@ func HttpBuildQuery(queryData url.Values) string {
 	return queryData.Encode()
 }
 
-func Ucfirst(str string) string {
+func UCFirst(str string) string {
 	for _, v := range str {
 		u := string(unicode.ToUpper(v))
 		return u + str[len(u):]
@@ -1127,11 +1139,11 @@ func UrlEncode(str string) string {
 	return url.QueryEscape(str)
 }
 
-func Rawurldecode(str string) (string, error) {
+func RawUrlDecode(str string) (string, error) {
 	return url.QueryUnescape(strings.Replace(str, "%20", "+", -1))
 }
 
-func Rawurlencode(str string) string {
+func RawUrlEncode(str string) string {
 	return strings.Replace(url.QueryEscape(str), "+", "%20", -1)
 }
 
@@ -1363,4 +1375,60 @@ func Md5(str string) string {
 		return ""
 	}
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func GetHostName() (string, error) {
+	return os.Hostname()
+}
+
+func GetHostNameByName(hostname string) (string, error) {
+	ips, err := net.LookupIP(hostname)
+	if ips != nil {
+		for _, v := range ips {
+			if v.To4() != nil {
+				return v.String(), nil
+			}
+		}
+		return "", nil
+	}
+	return "", err
+}
+
+func GetHostByNameL(hostname string) ([]string, error) {
+	ips, err := net.LookupIP(hostname)
+	if ips != nil {
+		var ipstrs []string
+		for _, v := range ips {
+			if v.To4() != nil {
+				ipstrs = append(ipstrs, v.String())
+			}
+		}
+		return ipstrs, nil
+	}
+	return nil, err
+}
+
+func ZipOpen(filename string) (*zip.ReadCloser, error) {
+	return zip.OpenReader(filename)
+}
+
+func Pack(order binary.ByteOrder, data interface{}) (string, error) {
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, order, data)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
+}
+
+func Unpack(order binary.ByteOrder, data string) (interface{}, error) {
+	var result []byte
+	r := bytes.NewReader([]byte(data))
+	err := binary.Read(r, order, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
