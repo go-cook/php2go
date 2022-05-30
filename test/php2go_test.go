@@ -1,7 +1,9 @@
 package test
 
 import (
+	"encoding/json"
 	"github.com/cexll/php2go"
+	gjson "github.com/goccy/go-json"
 	"log"
 	"testing"
 )
@@ -26,13 +28,13 @@ func TestPhp2Go(t *testing.T) {
 	log.Println(hash)
 	log.Println(php2go.PasswordVerify("123456", hash))
 
-	json, _ := php2go.JsonEncode(JsonOptions{
+	jsons, _ := php2go.JsonEncode(JsonOptions{
 		Data:    "123",
 		Code:    100,
 		Message: "hello",
 	})
-	log.Println(json)
-	option, _ := php2go.JsonDecode(json)
+	log.Println(jsons)
+	option, _ := php2go.JsonDecode(jsons)
 	log.Println(option)
 
 	log.Println(php2go.NumberFormat(1234.56, 2, ",", " "))
@@ -77,4 +79,17 @@ func TestPhp2Go(t *testing.T) {
 	log.Println(php2go.Md5("123123123"))
 
 	php2go.Echo("asddd")
+}
+
+func TestGoccyJson(t *testing.T) {
+
+	data := JsonOptions{
+		Data:    []int{},
+		Code:    100,
+		Message: "hello",
+	}
+	jsons, _ := json.Marshal(data)
+	log.Println(string(jsons))
+	gjsons, _ := gjson.Marshal(data)
+	log.Println(string(gjsons))
 }
